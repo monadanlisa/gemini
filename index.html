@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Angket Siswa</title>
+<style>
+  /* Tata letak: satu kolom sempit, satu langkah per layar, nomor skala besar sebagai ciri utama */
+  :root {
+    --bg: #f3f6f5; --card: #ffffff; --ink: #12221f; --muted: #566763;
+    --line: #d5dfdc; --accent: #0b6e63; --accent-ink: #ffffff;
+    --warn: #b42318; --warn-bg: #fdecea; --soft: #e6f1ee;
+    --font: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1816; --card: #15231f; --ink: #e6efec; --muted: #9db0ab;
+      --line: #27403a; --accent: #3fc1ad; --accent-ink: #04211c;
+      --warn: #ff9d8f; --warn-bg: #3a1c18; --soft: #1b302b;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg); color: var(--ink); font-family: var(--font);
+    font-size: 16px; line-height: 1.5;
+    padding-block: 20px 48px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  main { max-width: 640px; margin: 0 auto; }
+  .brand { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+  h1 { font-size: 26px; line-height: 1.2; margin: 0 0 16px; text-wrap: balance; }
+  h2 { font-size: 20px; line-height: 1.25; margin: 0 0 6px; text-wrap: balance; }
+  p { margin: 0 0 12px; }
+  .muted { color: var(--muted); }
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 0 0 18px; }
+  .steps i { height: 6px; border-radius: 3px; background: var(--line); display: block; }
+  .steps i.on { background: var(--accent); }
+  .steplabel { font-size: 13px; color: var(--muted); margin: -10px 0 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin: 0 0 14px; }
+  .rights { margin: 0 0 14px; padding-left: 20px; }
+  .rights li { margin: 0 0 6px; }
+  label.field { display: block; font-weight: 600; margin: 0 0 6px; }
+  select, button { font: inherit; }
+  select {
+    width: 100%; min-height: 48px; padding: 10px 12px; color: var(--ink);
+    background: var(--card); border: 1.5px solid var(--line); border-radius: 10px;
+  }
+  select:focus-visible, button:focus-visible, .scale input:focus-visible + span {
+    outline: 3px solid var(--accent); outline-offset: 2px;
+  }
+  .gap { height: 14px; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; min-height: 48px;
+    padding: 10px 20px; border-radius: 10px; border: 1.5px solid var(--accent);
+    background: var(--accent); color: var(--accent-ink); font-weight: 600; cursor: pointer;
+  }
+  .btn.ghost { background: transparent; color: var(--accent); }
+  .btn[disabled] { opacity: .55; cursor: default; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; }
+  .row .btn { flex: 1 1 160px; }
+  .item { border: 1px solid var(--line); background: var(--card); border-radius: 12px; padding: 14px 14px 12px; margin: 0 0 12px; min-width: 0; }
+  .item.missing { border-color: var(--warn); background: var(--warn-bg); }
+  .item legend { float: left; width: 100%; padding: 0; margin: 0 0 2px; font-weight: 500; }
+  .item legend + * { clear: both; }
+  .tag { display: inline-block; font-size: 12px; font-weight: 700; color: var(--accent); background: var(--soft); border-radius: 6px; padding: 1px 7px; margin-right: 8px; }
+  .scale { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 12px 0 4px; }
+  .scale label { display: block; cursor: pointer; }
+  .scale input { position: absolute; opacity: 0; pointer-events: none; }
+  .scale span {
+    display: flex; align-items: center; justify-content: center; min-height: 48px;
+    border: 1.5px solid var(--line); border-radius: 10px; font-size: 20px; font-weight: 700;
+    font-variant-numeric: tabular-nums; color: var(--muted); background: var(--card);
+  }
+  .scale input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .ends { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--muted); }
+  .opts label { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 10px; margin: 0 0 8px; cursor: pointer; }
+  .opts input { margin-top: 4px; accent-color: var(--accent); }
+  .opts label.sel { border-color: var(--accent); background: var(--soft); }
+  .msg { color: var(--warn); font-weight: 600; margin: 0 0 12px; min-height: 0; }
+  .done { text-align: center; padding: 28px 18px; }
+  .done .big { font-size: 40px; line-height: 1; margin: 0 0 10px; color: var(--accent); }
+  @media (prefers-reduced-motion: no-preference) { .item, .btn { transition: background .15s, border-color .15s; } }
+</style>
+</head>
+<body>
+<main>
+  <p class="brand">SMP Negeri 5 Kota Tangerang &middot; Informatika</p>
+  <h1>Angket Siswa</h1>
+  <div id="app"></div>
+</main>
+
+<script>
+(function () {
+  var SKALA = ['Sangat tidak setuju', 'Sangat setuju'];
+  var FREQ = [
+    'Tidak pernah',
+    'Jarang (kurang dari 1x sebulan)',
+    'Kadang-kadang (beberapa kali sebulan)',
+    'Sering (beberapa kali seminggu)',
+    'Hampir setiap hari'
+  ];
+  var BAGIAN = {
+    a: { judul: 'Bagian A. Persepsi tentang AI generatif', info: 'AI generatif adalah AI yang bisa membuat teks, gambar, atau jawaban, misalnya Gemini dan ChatGPT.', items: [
+      'AI generatif membantu saya memahami materi pelajaran.',
+      'AI generatif membuat tugas sekolah saya lebih cepat selesai.',
+      'AI generatif memberi saya ide baru saat belajar.',
+      'AI generatif mudah saya gunakan.',
+      'Saya tahu cara menulis perintah (prompt) agar AI memberi jawaban yang saya butuhkan.',
+      'Saya merasa nyaman memakai AI generatif untuk belajar.',
+      'Saya setuju AI generatif dipakai dalam pembelajaran asalkan aturannya jelas.',
+      'Saya khawatir memakai AI membuat saya malas berpikir sendiri.',
+      'Saya khawatir jawaban AI salah tetapi saya tidak menyadarinya.',
+      'Saya khawatir memakai AI dianggap menyontek.'
+    ] },
+    b: { judul: 'Bagian B. Kemandirian belajar', info: '', items: [
+      'Saya menetapkan target belajar sendiri tanpa menunggu disuruh.',
+      'Saya membuat rencana atau jadwal belajar sendiri.',
+      'Saya mengerjakan tugas tepat waktu tanpa diingatkan.',
+      'Saya baru belajar kalau ada ulangan atau disuruh guru.',
+      'Jika tidak paham, saya mencari sumber belajar lain (buku, video, internet).',
+      'Saya mencoba menyelesaikan soal sendiri sebelum bertanya kepada teman atau guru.',
+      'Saya memeriksa kembali hasil belajar untuk melihat bagian yang belum saya kuasai.',
+      'Saya mudah menyerah ketika menemukan materi yang sulit.',
+      'Saya bertanggung jawab atas hasil belajar saya sendiri.',
+      'Saya tetap belajar dengan baik walaupun tidak diawasi.'
+    ] },
+    c: { judul: 'Bagian C. Berpikir kritis', info: '', items: [
+      'Saya berusaha memahami maksud sebenarnya dari informasi yang saya baca atau dengar.',
+      'Saya membandingkan beberapa sumber sebelum mempercayai suatu informasi.',
+      'Saya memeriksa apakah suatu informasi punya bukti yang jelas.',
+      'Saya memikirkan alasan di balik sebuah pendapat sebelum menyetujuinya.',
+      'Saya bisa menjelaskan alasan dari jawaban atau pendapat saya.',
+      'Saya mempertimbangkan sudut pandang yang berbeda dari pendapat saya.',
+      'Saya menarik kesimpulan berdasarkan data atau fakta, bukan sekadar perasaan.',
+      'Saya langsung percaya pada informasi yang saya dapat tanpa memeriksanya lagi.',
+      'Saya mau mengubah pendapat jika ada bukti yang lebih kuat.',
+      'Saya memeriksa kembali jawaban saya untuk mencari kesalahan.'
+    ] }
+  };
+  var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-wBRgeXIEXjB6GBOAfcvuI-mPAYsM4cnMrakkLnVGLyVXwcpFmbr3Alfm9fDMkIsm2g/exec';
+  var KELAS = ["8I", "8J", "9D", "9E", "9F", "9G", "9H", "9I", "9J"];
+  var DATA_SISWA = {"8I": ["Alfan Dwi Pratama", "Aris Alpian Syah", "Arjuna Setia Ghifarri", "Arsyadia Shafwa Viandin", "Aurelia Zahrani", "Clarissa Adara Dwiasti", "Dwi Arya Kesuma", "Faira Alifah Khairana", "Farand Assyuja Chandra", "Ghifary Iqbal Al Farizy", "Gisya Septia Putri", "Lizam Faezha Widianto", "Maulana Azkaghani Sayidan", "Maurin Agustania", "Muhammad Eza Kristiawan", "Nisa Faizatul Azkiya", "Qisya Mirza Putri", "Radhitya Arziki Febriansyah", "Rafael Eliezer Daffa", "Revania Aurel Kusuma", "Rezky Akbar Maulana", "Rifa Muhamad Dzaki", "Samuel Christhofer", "Satria Anggi Saputra", "Shaza Azzahra", "Siti Aqila Kirana", "Syifa Novita Sari", "Tegar Satrio Wicaksono", "Vanesa Olivia"], "8J": ["Alief Bachtiar Hendhrayana", "Alya Nur Rizki", "Andini January Pasya", "Arfan Radhika", "Arya Putra", "As Syifa' Ayu Kurniawan", "Aulia Bela", "Bagas Rizky Adhi Satria", "Bianca Arla Aulia", "Dewi Kirana Putri Mujiono", "Dinda Syauqy Alfiyyah", "Fi Sakhri Hayati", "Mivtahul Alamsyah", "Muhamad Fadlan Al Faqih", "Muhammad Akyas Abqariy", "Muhammad Azam Alfarezi", "Muhammad Fakhri Azhar", "Muhammad Ikhsan", "Muhammad Nadhif Azzam", "Muhammad Raihan Adiansyah", "Nabila Fhauziyah Siti Rohmah", "Qiranni Azzahra Adhelya Firdaus", "Rahma Sekar Arum", "Rifqi Dwi Anugrah", "Shelli Septiani", "Talita Arrif'Ah", "Zyra Alzena Levia"], "9D": ["Adam Rahman Ramli", "Adhira Dwi Azhari", "Adzkia Rezky Kholifah Uno", "Aqilla Almir Nur Azizi", "Arvian Ramadhan", "Asyura Dinda Khalisa", "Bilal Maghribi", "Dewi Handayani", "Fitria Kartika", "Kafka Rakavendra Alvaro", "Karolina Firdaus", "Khaerul Hamzah Januar", "Kian Putra Ramadhan", "Muhammad Ilham Ramadhan", "Nafiza Nur Handayani", "Nayla Putri Ramadhani", "Nuril Muhammad Ghifari", "Nurul Azizah", "Qinara Aryadjati", "Rama Dea", "Ridho Abdul Kholik", "Yuyun Yuniarti", "Zelda Maulidyah", "Zyva Fazila Laiqa"], "9E": ["Abdul Rohman", "Affan", "Afika Putri Febriani", "Aji Sakseno Maulana Noval", "Aninda Nisa Muthia", "Anjelina Suaib", "David Maulana", "Dea Ainun Sofi", "Delano Rayhan Anggoro", "Dinda Bintang Kinasih", "Fitri Hanafilah", "Hosea Ezekiel Depary", "Josua Raymond Hutasoit", "Junelven Kristian Fa'Ot", "Khanzyah Al Zairahi Nurul Fatwah", "Muhamad Ilhamsyah Al Bukhory", "Muhammad Al Fatich", "Muhammad Farga Rabani", "Muhammad Fauzaan Firmansyah", "Najwa Khumaira", "Naura Soviana Putri", "Noval Sapta Narendra", "Sultan Mahmud Syah", "Tania Natasya"], "9F": ["Alyssa Azzahra Wantoro", "Amanda Aulia Rachmawati", "Athar Raisya Rahman", "Cinta Khalishah Maulana", "Egi Nuh Rohman", "Habib Adha Fadila", "Haris Rasuli", "Izdihar Junia Farhah", "Juni Nur Syakina", "Latifah Maulidina", "Muhammad Dzikri Darmawan", "Muhammad Raffa Zahrandita", "Nakila Rachmawati Putri", "Raisya Qania Sahira Kismana", "Reina Rahmawati", "Salwa Lathifah Arrajab", "Wafri Adis Akmal", "Zaneta Adelia Irawan"], "9G": ["Aqila Adelia Sulaiman", "Arya Dharma Putra", "Azizi Saruni Anugrah Rahman", "Bima Risky Apriliansyah", "Charoline Rahayu Al-Zahra", "Daffa Haidir Al-Kahfi", "Fadilah Aulia Rahma", "Fahri Adair Ahmad", "Faiqa Najma Muharrami", "Ibrahim Ramadhan", "Jihan Nauri", "Layla Fitriana Zulkarnaen", "Lisa Azahira", "Maulana Syafiq Adyatta", "Monika Nur Oktavia", "Muhamad Deandra Adzikra Hafi", "Muhamad Raka Al Fathir", "Nabila Aulia Zahra", "Nadia Nur Fitriani", "Putra Kurniawan", "Rafa Aditya", "Revda Elvan Hidayat", "Reza Anugrah Ramadani", "Salsa Chandra Kinasih", "Sintya Luthfie Annisa Rahmah Siadari", "Syifa Nur Ramadhani", "Syuhbatul Iman", "Thoriq Rasyid Amanta Pohan"], "9H": ["Ajeng Ayu Qinanty", "Ananda Triandini", "Asheeqa Qiana Deron", "Dendy Suryadinata", "Dewi Erni Yana", "Endry Pramana Aryadi", "Fairul Nizam Ramadhan", "Fairy Ananda Latisya", "Felychia Jennifer", "Gatan Rahmat Alfauzi", "Hanifa Julica", "Kaynan Suwandi", "Lati Dwi Sukma", "Luh Gede Anandita Asih Sawitri", "Maulana Ibnu Affan", "Mega Aviyanti", "Muhamad Akbar Azami", "Muhamad Ilham Syahbana", "Muhamad Riziq Zulfikri", "Muhammad Fadlli Syahri Azhar", "Muhammad Fahri", "Muhammad Halim Darmawan", "Nayla Putri Syabilla", "Okhafiyya Nike Al-Mukhtari", "Rayhan Nadzmi", "Savira Fitri", "Shakayla Raisya Nur Aafiyah", "Shela Apryllia", "Zahra Radysti Nugroho"], "9I": ["Abdul Azis", "Abdul Fattah Nur Fachrizi", "Alisya Safitri", "Ardhan Ardiansyah", "Aziiz Al'Billah", "Erlangga Habibie Ramadhan", "Haidar Fahmi Mahammed", "Hanna Syahidah", "Jeskia", "Lutfiyana Syakirah Iskandar", "Maheswari Anindha Tawangsasi", "Miftakhul Jannah", "Muhammad Akbar Abimanyu", "Muhammad Fajar Ramadhan", "Muhammad Farhan Ramadhan Arifin", "Muhammad Fazdriansyah", "Nabil Fadhlan Setiawan", "Neng Nadivah Nurmanah", "Raisya Anindya Adillah", "Rizik Sa'Ban Mubarok", "Safa Ainun", "Sakqnah Septiana Alyarokh", "Shakila Ramadhani", "Tito Bima Al-Rizky", "Zhariifah Naila Ramadhani"], "9J": ["Adzkhia Awalia Asysyafa", "Aishara Makhaila Rubby", "Aisyah Aila Varisha", "Alvino Aprilian Akbar", "Amira Akifa Ghaziya", "Asyam Muhammad Daffi", "Asyifah Angraeni", "Azira Keysha Rahadatul'Aisy", "Detalia Senandung Nacita", "Dinda Letisya Putri", "Faizhyar Al Anhar", "Kalyana Tantri", "Laila Oktavian", "Mohammad Aska Saputra", "Muhammad Agra Bachtiar", "Muhammad Fadhlan", "Muhammad Hafiizh Muzhaffar", "Muhammad Hasbi", "Muhammad Restu Maulana", "Nadine Kinanti Putri", "Naomi Hosianna Simbolon", "Rajaa Aaqila Saptiyant", "Raka Aditia Sunarta", "Ramdani Abdullah", "Seftiyani Yuki Andini", "Shafa Safitri", "Sheehan Azka Alfais", "Syahla Nazhiifa Zulfa Ubrusun", "Syakilla Ramadhani Adisty"]};
+
+  function call(name, args, ok, fail) {
+    if (name === 'getNama') {
+      var kelas = args[0];
+      ok(DATA_SISWA[kelas] || []);
+      return;
+    }
+    if (name === 'simpan') {
+      var payload = args[0];
+      if (!SCRIPT_URL || SCRIPT_URL === 'PASTE_URL_WEB_APP_APPS_SCRIPT_DISINI') {
+        fail('URL Apps Script belum dipasang di SCRIPT_URL.');
+        return;
+      }
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      })
+        .then(function (res) { return res.json(); })
+        .then(function (data) { ok(data); })
+        .catch(function (err) { fail(err && err.message ? err.message : String(err)); });
+      return;
+    }
+  }
+
+  var app = document.getElementById('app');
+  var S = { step: 0, setuju: false, kelas: '', nama: '', freq: 0, a: {}, b: {}, c: {}, names: [], loadingNames: false, busy: false };
+
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function stepper(n) {
+    var h = '<div class="steps" aria-hidden="true">';
+    for (var i = 1; i <= 4; i++) h += '<i class="' + (i <= n ? 'on' : '') + '"></i>';
+    return h + '</div>';
+  }
+
+  function viewConsent() {
+    app.innerHTML =
+      '<div class="card">' +
+      '<h2>Lembar persetujuan</h2>' +
+      '<p>Angket ini bagian dari penelitian Ibu Monalisa, S.Kom., Gr. (guru Informatika) tentang persepsi siswa terhadap AI generatif, kompetensi AI (skor Gemini Certification for Students), kemandirian belajar, dan berpikir kritis. Pengisian sekitar 10-15 menit. Tidak ada jawaban benar atau salah.</p>' +
+      '<p>Data yang dipakai: jawaban angket ini, skor Gemini Certification for Students.</p>' +
+      '<ol class="rights">' +
+      '<li>  </li>' +
+      '<li>Menolak atau menjawab apa pun <strong>tidak memengaruhi nilaimu</strong>.</li>' +
+      '<li>Namamu hanya dipakai untuk mencocokkan data, lalu diganti kode. Hasil hanya dilaporkan secara gabungan, tanpa nama.</li>' +
+      '<li>Jawabanmu hanya dipakai untuk penelitian.</li>' +
+      '</ol>' +
+      '<p><strong>Apakah kamu bersedia ikut serta dan mengizinkan datamu dipakai seperti di atas?</strong></p>' +
+      '<div class="row"><button class="btn" id="yes">Ya, saya bersedia</button><button class="btn ghost" id="no">Tidak bersedia</button></div>' +
+      '</div>';
+    document.getElementById('yes').onclick = function () { S.setuju = true; S.step = 1; render(); };
+    document.getElementById('no').onclick = function () { S.step = 9; render(); };
+  }
+
+  function viewIdentitas() {
+    var opt = '<option value="">Pilih kelas</option>';
+    KELAS.forEach(function (k) { opt += '<option' + (S.kelas === k ? ' selected' : '') + '>' + k + '</option>'; });
+    var nm = '<option value="">' + (S.loadingNames ? 'Memuat daftar nama...' : (S.kelas ? 'Pilih namamu' : 'Pilih kelas dulu')) + '</option>';
+    S.names.forEach(function (n) { nm += '<option value="' + esc(n) + '"' + (S.nama === n ? ' selected' : '') + '>' + esc(n) + '</option>'; });
+    app.innerHTML = stepper(1) + '<p class="steplabel">Langkah 1 dari 4 &middot; Identitas</p>' +
+      '<div class="card"><label class="field" for="kelas">Kelas</label><select id="kelas">' + opt + '</select>' +
+      '<div class="gap"></div><label class="field" for="nama">Nama</label><select id="nama"' + (S.kelas && !S.loadingNames ? '' : ' disabled') + '>' + nm + '</select>' +
+      '<p class="muted" style="margin:10px 0 0;font-size:14px">Pilih namamu sendiri. Namamu hanya dipakai untuk mencocokkan data, lalu diganti kode. Jika namamu tidak ada, hubungi Ibu Monal.</p></div>' +
+      '<p class="msg" id="msg" role="alert"></p>' +
+      '<button class="btn" id="next">Lanjut</button>';
+    document.getElementById('kelas').onchange = function (e) {
+      S.kelas = e.target.value; S.nama = ''; S.names = [];
+      if (!S.kelas) { render(); return; }
+      S.loadingNames = true; render();
+      call('getNama', [S.kelas], function (list) { S.names = list || []; S.loadingNames = false; render(); },
+        function () { S.loadingNames = false; render(); document.getElementById('msg').textContent = 'Daftar nama gagal dimuat. Muat ulang halaman.'; });
+    };
+    document.getElementById('nama').onchange = function (e) { S.nama = e.target.value; };
+    document.getElementById('next').onclick = function () {
+      if (!S.kelas || !S.nama) { document.getElementById('msg').textContent = 'Pilih kelas dan namamu dulu.'; return; }
+      S.step = 2; render(); window.scrollTo(0, 0);
+    };
+  }
+
+  function viewBagian(key, n, nextStep) {
+    var B = BAGIAN[key], h = stepper(n) + '<p class="steplabel">Langkah ' + n + ' dari 4 &middot; ' + esc(B.judul) + '</p>';
+    h += '<h2>' + esc(B.judul) + '</h2>';
+    if (B.info) h += '<p class="muted">' + esc(B.info) + '</p>';
+    h += '<p class="muted">Pilih angka 1 sampai 5. 1 = ' + SKALA[0] + ', 5 = ' + SKALA[1] + '.</p>';
+    if (key === 'a') {
+      h += '<fieldset class="item opts" id="f-freq" style="border:1px solid var(--line)"><legend><span class="tag">AI</span>Seberapa sering kamu memakai AI generatif untuk belajar atau mengerjakan tugas?</legend><div style="height:10px"></div>';
+      FREQ.forEach(function (f, i) { h += '<label' + (S.freq === i + 1 ? ' class="sel"' : '') + '><input type="radio" name="freq" value="' + (i + 1) + '"' + (S.freq === i + 1 ? ' checked' : '') + '><span>' + esc(f) + '</span></label>'; });
+      h += '</fieldset>';
+    }
+    B.items.forEach(function (t, i) {
+      var id = key + (i + 1), v = S[key][id] || 0;
+      h += '<fieldset class="item" id="f-' + id + '"><legend><span class="tag">' + id.toUpperCase() + '</span>' + esc(t) + '</legend><div class="scale">';
+      for (var k = 1; k <= 5; k++) h += '<label><input type="radio" name="' + id + '" value="' + k + '"' + (v === k ? ' checked' : '') + '><span>' + k + '</span></label>';
+      h += '</div><div class="ends"><span>' + SKALA[0] + '</span><span>' + SKALA[1] + '</span></div></fieldset>';
+    });
+    h += '<p class="msg" id="msg" role="alert"></p><div class="row">' +
+      '<button class="btn ghost" id="back">Kembali</button>' +
+      '<button class="btn" id="next">' + (key === 'c' ? 'Kirim jawaban' : 'Lanjut') + '</button></div>';
+    app.innerHTML = h;
+
+    app.onchange = function (e) {
+      var t = e.target; if (!t || t.type !== 'radio') return;
+      var fs = t.closest('fieldset'); if (fs) fs.classList.remove('missing');
+      if (t.name === 'freq') {
+        S.freq = +t.value;
+        Array.prototype.forEach.call(document.querySelectorAll('.opts label'), function (l) { l.classList.toggle('sel', l.querySelector('input').checked); });
+      } else { S[key][t.name] = +t.value; }
+    };
+    document.getElementById('back').onclick = function () { S.step = n - 1; render(); window.scrollTo(0, 0); };
+    document.getElementById('next').onclick = function () {
+      var miss = [];
+      if (key === 'a' && !S.freq) miss.push('f-freq');
+      B.items.forEach(function (_, i) { var id = key + (i + 1); if (!S[key][id]) miss.push('f-' + id); });
+      Array.prototype.forEach.call(document.querySelectorAll('.item'), function (f) { f.classList.toggle('missing', miss.indexOf(f.id) > -1); });
+      if (miss.length) {
+        document.getElementById('msg').textContent = 'Masih ada ' + miss.length + ' pertanyaan yang belum dijawab (ditandai merah).';
+        document.getElementById(miss[0]).scrollIntoView({ block: 'center', behavior: 'smooth' });
+        return;
+      }
+      if (key === 'c') { kirim(); } else { S.step = nextStep; render(); window.scrollTo(0, 0); }
+    };
+  }
+
+  function kirim() {
+    if (S.busy) return;
+    S.busy = true;
+    var btn = document.getElementById('next'); btn.disabled = true; btn.textContent = 'Mengirim...';
+    function arr(o, p) { var r = []; for (var i = 1; i <= 10; i++) r.push(o[p + i]); return r; }
+    var payload = { setuju: true, kelas: S.kelas, nama: S.nama, freq: S.freq, a: arr(S.a, 'a'), b: arr(S.b, 'b'), c: arr(S.c, 'c') };
+    call('simpan', [payload], function (r) {
+      S.busy = false;
+      if (r && r.ok) { S.step = 8; render(); window.scrollTo(0, 0); }
+      else { btn.disabled = false; btn.textContent = 'Kirim jawaban'; document.getElementById('msg').textContent = (r && r.msg) || 'Jawaban belum terkirim. Coba lagi.'; }
+    }, function (m) {
+      S.busy = false; btn.disabled = false; btn.textContent = 'Kirim jawaban';
+      document.getElementById('msg').textContent = m || 'Jawaban belum terkirim. Periksa koneksi lalu coba lagi.';
+    });
+  }
+
+  function viewDone(ok) {
+    app.innerHTML = '<div class="card done"><div class="big" aria-hidden="true">&#10003;</div>' +
+      '<h2>' + (ok ? 'Terima kasih!' : 'Tidak apa-apa') + '</h2>' +
+      '<p class="muted">' + (ok ? 'Jawabanmu sudah tersimpan. Kamu boleh menutup halaman ini.' : 'Kamu memilih tidak ikut. Tidak ada data yang disimpan dan nilaimu tidak terpengaruh. Kamu boleh menutup halaman ini.') + '</p></div>';
+  }
+
+  function render() {
+    app.onchange = null;
+    if (S.step === 0) viewConsent();
+    else if (S.step === 1) viewIdentitas();
+    else if (S.step === 2) viewBagian('a', 2, 3);
+    else if (S.step === 3) viewBagian('b', 3, 4);
+    else if (S.step === 4) viewBagian('c', 4, 8);
+    else if (S.step === 8) viewDone(true);
+    else viewDone(false);
+  }
+  render();
+})();
+</script>
+</body>
+</html>
